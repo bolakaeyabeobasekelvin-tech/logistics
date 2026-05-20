@@ -1,0 +1,6 @@
+{
+  "name": "Transatlantic Express Logistics",
+  "description": "Comprehensive shipping logistics platform with real-time transit tracking and AI assistance for US-UK delivery operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
