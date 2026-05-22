@@ -1,103 +1,36 @@
-export interface SenderInfo {
-  fullName: string;
-  company: string;
-  email: string;
-  phone: string;
-  street: string;
-  city: string;
-  postalCode: string;
-  country: "United Kingdom" | "United States";
-}
+export type ShipmentStatus = 'received' | 'transit' | 'customs' | 'out_for_delivery' | 'delivered';
 
-export interface ReceiverInfo {
-  fullName: string;
-  company: string;
-  email: string;
-  phone: string;
-  street: string;
-  city: string;
-  postalCode: string;
-  country: "United Kingdom" | "United States";
-}
+export type CarrierType = 'Apex Logistics' | 'FedEx' | 'DHL Global' | 'UPS Transport' | 'USPS Priority' | 'Oceanic Cargo' | 'Swift Express Cargo';
 
-export interface ParcelDetails {
-  weight: string;
-  length: string;
-  width: string;
-  height: string;
-  value: string;
-  description: string;
-}
+export type ShippingMethod = 'Ground Transport' | 'Express Delivery' | 'Air Freight' | 'Sea Cargo';
 
-export interface QuoteRequest {
-  origin: string;
-  destination: string;
-  weight: number;
-  weightUnit: "kg" | "lbs";
-  length: number;
-  width: number;
-  height: number;
-  dimUnit: "cm" | "in";
-  value: number;
-  declaredCurrency: "USD" | "GBP";
-}
-
-export interface QuoteOption {
+export interface ShipmentHistoryItem {
   id: string;
-  name: string;
-  carrier: string;
-  speed: "Economy" | "Standard" | "Express";
-  transitDays: number;
-  cost: number;
-  costBreakdown: {
-    baseRate: number;
-    fuelSurcharge: number;
-    customsProcessing: number;
-    transatlanticSecurity: number;
-    taxVAT: number;
-  };
-}
-
-export interface TrackingPoint {
-  lat: number;
-  lng: number;
-}
-
-export interface TrackingDetails {
-  id: string;
-  senderName: string;
-  receiverName: string;
-  origin: { name: string; lat: number; lng: number; code: string };
-  destination: { name: string; lat: number; lng: number; code: string };
-  status: string;
-  milestoneIndex: number;
-  weightKg: number;
-  weightLbs: number;
-  carrierPartner: string;
-  vesselName: string;
-  declaredValue: number;
-  shipmentType: string;
-  liveStatus: {
-    currentLocation: TrackingPoint;
-    progressPct: number;
-    speedKnots: number;
-    headingDegree: number;
-    estimatedArrivalMin: number;
-    lastUpdated: string;
-  };
-}
-
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "advisor";
-  text: string;
   timestamp: string;
+  location: string;
+  description: string;
+  status: ShipmentStatus;
 }
 
-export interface LocalizationConfig {
-  region: "US" | "UK";
-  currency: "USD" | "GBP";
-  weightUnit: "kg" | "lbs";
-  dimensionUnit: "cm" | "in";
-  language: "en-US" | "en-GB";
+export interface Shipment {
+  id: string; // Tracking Number (e.g., US-9482-9018)
+  senderName: string;
+  senderAddress: string;
+  receiverName: string;
+  receiverAddress: string;
+  originCity: string;
+  originCountry: string;
+  destinationCity: string;
+  destinationCountry: string;
+  status: ShipmentStatus;
+  carrier: CarrierType;
+  shippingMethod: ShippingMethod;
+  weight: number; // in lbs
+  dimensions: string; // e.g., 20x15x10 in
+  estimatedDelivery: string; // Date string
+  isActive: boolean;
+  visibility: 'visible' | 'hidden';
+  history: ShipmentHistoryItem[];
+  cargoValue?: number; // USD
+  notes?: string;
 }
