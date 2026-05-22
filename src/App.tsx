@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, Ship, Globe2, HelpCircle, Phone, Mail, Clock, 
-  MapPin, Menu, X, ArrowRight, ShieldCheck, Layers, Settings, FileText
+  MapPin, Menu, X, ArrowRight, ShieldCheck, Layers, Settings, FileText, Lock, Unlock
 } from 'lucide-react';
 import { Shipment } from './types';
 import { getShipments, saveShipments, INITIAL_SHIPMENTS } from './data/mockShipments';
@@ -13,6 +13,7 @@ import AboutView from './components/AboutView';
 import ServicesView from './components/ServicesView';
 import TrackView from './components/TrackView';
 import OnlinePanelView from './components/OnlinePanelView';
+import LoginPortal from './components/LoginPortal';
 
 type ActiveTab = 'home' | 'about' | 'services' | 'track' | 'online_panel';
 
@@ -21,6 +22,16 @@ export default function App() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentTrackingId, setCurrentTrackingId] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Operator Authorization State from localStorage to survive reloads/HMR
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('apex_admin_auth') === 'true';
+  });
+
+  // Keep localStorage in sync with admin authentication status
+  useEffect(() => {
+    localStorage.setItem('apex_admin_auth', String(isAdminAuthenticated));
+  }, [isAdminAuthenticated]);
 
   // Quick form for footer contact
   const [contactEmail, setContactEmail] = useState('');
@@ -66,10 +77,12 @@ export default function App() {
           <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-400" /> Central Office: Houston, TX, USA</span>
         </div>
         <div className="flex items-center gap-4">
-          <a href="mailto:support@apextrans.usa" className="hover:text-white transition flex items-center gap-1">
-            <Mail className="w-3.5 h-3.5" /> support@apextrans.usa
+          <a href="mailto:ship@apextrans.com" className="hover:text-white transition flex items-center gap-1">
+            <Mail className="w-3.5 h-3.5 text-sky-400" /> ship@apextrans.com
           </a>
-          <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-emerald-400" /> +1 (800) 555-APEX</span>
+          <a href="tel:260-270-7501" className="hover:text-white transition flex items-center gap-1">
+            <Phone className="w-3.5 h-3.5 text-emerald-400" /> 260-270-7501
+          </a>
         </div>
       </div>
 
@@ -94,13 +107,21 @@ export default function App() {
 
           {/* Navigation Links for Desktop */}
           <nav className="hidden md:flex items-center gap-1">
-            {[
-              { id: 'home', label: 'Home' },
-              { id: 'about', label: 'About Us' },
-              { id: 'services', label: 'Services' },
-              { id: 'track', label: 'Track Cargo' },
-              { id: 'online_panel', label: 'Online Panel', isBadge: true }
-            ].map((tab) => {
+            {(isAdminAuthenticated 
+              ? [
+                  { id: 'home', label: 'Home' },
+                  { id: 'about', label: 'About Us' },
+                  { id: 'services', label: 'Services' },
+                  { id: 'track', label: 'Track Cargo' },
+                  { id: 'online_panel', label: 'Online Panel', isBadge: true }
+                ]
+              : [
+                  { id: 'home', label: 'Home' },
+                  { id: 'about', label: 'About Us' },
+                  { id: 'services', label: 'Services' },
+                  { id: 'track', label: 'Track Cargo' }
+                ]
+            ).map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
@@ -126,6 +147,20 @@ export default function App() {
                 </button>
               );
             })}
+
+            {/* Explicit Sign Out option if signed in */}
+            {isAdminAuthenticated && (
+              <button
+                id="header-nav-signout"
+                onClick={() => {
+                  setIsAdminAuthenticated(false);
+                  selectTab('home');
+                }}
+                className="ml-2 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-rose-600 hover:text-rose-700 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer"
+              >
+                Sign Out
+              </button>
+            )}
           </nav>
 
           {/* Action CTA Trigger Button (Right Header) */}
@@ -157,13 +192,21 @@ export default function App() {
               className="md:hidden block bg-white border-t border-slate-50 overflow-hidden mt-4"
             >
               <div className="flex flex-col py-4 space-y-2">
-                {[
-                  { id: 'home', label: 'Home View' },
-                  { id: 'about', label: 'Logistics Story' },
-                  { id: 'services', label: 'Aviation & Marine cargo' },
-                  { id: 'track', label: 'Search Status' },
-                  { id: 'online_panel', label: 'Online Admin Console' }
-                ].map((item) => (
+                {(isAdminAuthenticated
+                  ? [
+                      { id: 'home', label: 'Home View' },
+                      { id: 'about', label: 'Logistics Story' },
+                      { id: 'services', label: 'Aviation & Marine cargo' },
+                      { id: 'track', label: 'Search Status' },
+                      { id: 'online_panel', label: 'Online Admin Console' }
+                    ]
+                  : [
+                      { id: 'home', label: 'Home View' },
+                      { id: 'about', label: 'Logistics Story' },
+                      { id: 'services', label: 'Aviation & Marine cargo' },
+                      { id: 'track', label: 'Search Status' }
+                    ]
+                ).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => selectTab(item.id as ActiveTab)}
@@ -177,9 +220,21 @@ export default function App() {
                   </button>
                 ))}
 
+                {isAdminAuthenticated && (
+                  <button
+                    onClick={() => {
+                      setIsAdminAuthenticated(false);
+                      selectTab('home');
+                    }}
+                    className="w-full text-[11px] text-left py-3 px-4 rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition text-rose-600 hover:bg-rose-50 flex items-center gap-1.5"
+                  >
+                    Logout Admin Console
+                  </button>
+                )}
+
                 <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-2 mt-4 text-[11px] text-slate-500 font-mono">
                   <span className="font-semibold text-slate-700">Central Office Hotline:</span>
-                  <span>USA Support: +1 (800) 555-APEX</span>
+                  <span>USA Support: 260-270-7501</span>
                   <span>Port Operations Desk: NYC / LA Harbor</span>
                 </div>
               </div>
@@ -222,11 +277,22 @@ export default function App() {
             )}
 
             {activeTab === 'online_panel' && (
-              <OnlinePanelView 
-                shipments={shipments} 
-                onUpdateShipments={handleUpdateShipments}
-                onResetShipments={handleResetShipments}
-              />
+              isAdminAuthenticated ? (
+                <OnlinePanelView 
+                  shipments={shipments} 
+                  onUpdateShipments={handleUpdateShipments}
+                  onResetShipments={handleResetShipments}
+                />
+              ) : (
+                <LoginPortal 
+                  onSuccess={() => {
+                    setIsAdminAuthenticated(true);
+                  }}
+                  onCancel={() => {
+                    selectTab('home');
+                  }}
+                />
+              )
             )}
           </motion.div>
         </AnimatePresence>
@@ -262,7 +328,7 @@ export default function App() {
               <button onClick={() => selectTab('about')} className="hover:text-white transition cursor-pointer text-left py-1">Our Story</button>
               <button onClick={() => selectTab('services')} className="hover:text-white transition cursor-pointer text-left py-1">Port Services</button>
               <button onClick={() => selectTab('track')} className="hover:text-white transition cursor-pointer text-left py-1">Track Container</button>
-              <button onClick={() => selectTab('online_panel')} className="hover:text-white text-sky-300 transition cursor-pointer text-left py-1">WooCommerce Admin</button>
+              <button onClick={() => selectTab('online_panel')} className="hover:text-white text-sky-300 transition cursor-pointer text-left py-1 flex items-center gap-1"><Lock className="w-3 h-3 text-sky-400" /> Broker Portal</button>
             </div>
           </div>
 
@@ -324,10 +390,18 @@ export default function App() {
         {/* Rights metadata */}
         <div className="max-w-7xl mx-auto pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-600 font-mono">
           <span>© 2026 Apex Intermodal Logistics LLC. All rights reserved.</span>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <a href="#" className="hover:text-slate-400 transition">Cargo Liability Terms</a>
             <span>•</span>
             <a href="#" className="hover:text-slate-400 transition">FSC Index Surcharges</a>
+            <span>•</span>
+            <button 
+              id="footer-broker-login-link"
+              onClick={() => selectTab('online_panel')} 
+              className="hover:text-sky-400 text-slate-500 transition cursor-pointer flex items-center gap-1"
+            >
+              <Lock className="w-3.5 h-3.5 text-slate-500" /> Broker Portal
+            </button>
           </div>
         </div>
       </footer>
