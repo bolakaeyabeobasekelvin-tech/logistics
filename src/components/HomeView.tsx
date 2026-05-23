@@ -6,9 +6,10 @@ import { Shipment } from '../types';
 interface HomeViewProps {
   onSearch: (trackingId: string) => void;
   availableShipments: Shipment[];
+  isAdminAuthenticated?: boolean;
 }
 
-export default function HomeView({ onSearch, availableShipments }: HomeViewProps) {
+export default function HomeView({ onSearch, availableShipments, isAdminAuthenticated = false }: HomeViewProps) {
   const [searchVal, setSearchVal] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -104,18 +105,20 @@ export default function HomeView({ onSearch, availableShipments }: HomeViewProps
             )}
 
             {/* Quick Demo Links */}
-            <div className="mt-4 flex flex-wrap gap-2 items-center text-xs">
-              <span className="text-slate-400 font-sans mr-1">Demo Shipments:</span>
-              {availableShipments.filter(s => s.visibility !== 'hidden').slice(0, 3).map((shipment) => (
-                <button
-                  key={shipment.id}
-                  onClick={() => fillDemoId(shipment.id)}
-                  className="px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700/85 text-sky-300 hover:text-white rounded-lg transition border border-slate-700/40 font-mono cursor-pointer"
-                >
-                  {shipment.id} ({shipment.status.replace('_', ' ')})
-                </button>
-              ))}
-            </div>
+            {isAdminAuthenticated && (
+              <div className="mt-4 flex flex-wrap gap-2 items-center text-xs">
+                <span className="text-slate-400 font-sans mr-1">Demo Shipments:</span>
+                {availableShipments.filter(s => s.visibility !== 'hidden').slice(0, 3).map((shipment) => (
+                  <button
+                    key={shipment.id}
+                    onClick={() => fillDemoId(shipment.id)}
+                    className="px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700/85 text-sky-300 hover:text-white rounded-lg transition border border-slate-700/40 font-mono cursor-pointer"
+                  >
+                    {shipment.id} ({shipment.status.replace('_', ' ')})
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

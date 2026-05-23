@@ -272,7 +272,7 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
         )}
 
         {/* Quick Selections */}
-        {!selectedShipment && (
+        {!selectedShipment && isAdminAuthenticated && (
           <div className="mt-6 pt-6 border-t border-slate-100">
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Operational Demo Systems</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -314,7 +314,9 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-slate-50 gap-4">
                   <div className="space-y-1">
                     <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest">Active Shipment Tracking Key</span>
-                    <h3 className="text-2xl font-bold font-mono text-slate-900 tracking-wide">{selectedShipment.id}</h3>
+                    <h3 className="text-2xl font-bold font-mono text-slate-900 tracking-wide">
+                      {isAdminAuthenticated ? selectedShipment.id : '••••-••••-••••'}
+                    </h3>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -739,7 +741,7 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span className="font-mono text-[9px] font-bold text-slate-700 bg-sky-50 border border-sky-100 px-1.5 py-0.5 rounded">
-                              {alert.shipmentId}
+                              {isAdminAuthenticated ? alert.shipmentId : '••••-••••-••••'}
                             </span>
                             <span className="text-slate-450 text-[9px] font-mono">active</span>
                           </div>
@@ -776,7 +778,7 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                   This parcel transit status is securely registered with specialized USA import brokerages. To file an insurance variance or dispute carrier logs, reference registration code:
                 </p>
                 <code className="block bg-slate-950 p-2.5 rounded-lg text-emerald-400 font-mono text-[10px] text-center border border-slate-800 tracking-wider">
-                  REG_FMC_{selectedShipment.id.replace(/-/g, '_')}
+                  REG_FMC_{isAdminAuthenticated ? selectedShipment.id.replace(/-/g, '_') : '••••_••••_••••'}
                 </code>
               </div>
             </div>
@@ -855,7 +857,7 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                             <div className="border-b border-slate-200 pb-3 mb-4 text-[11px] text-slate-500 space-y-1">
                               <div><strong className="text-slate-705">From:</strong> Apex Intermodal Dispatch System &lt;dispatcher@apextrackhub.com&gt;</div>
                               <div><strong className="text-slate-705">To:</strong> {smtpTargetEmail || 'shipper-terminal@business-hub.com'}</div>
-                              <div><strong className="text-slate-705">Subject:</strong> {mailTopic === 'cargo_dispute' ? `[APEX DISPUTE] Shipment ID: ${selectedShipment.id} - Cargo Deviation` : mailTopic === 'customs_hold' ? `[CUSTOMS CLEARANCE] Reference ID: ${selectedShipment.id}` : `[MANIFEST AMEND] Update Weights for: ${selectedShipment.id}`}</div>
+                              <div><strong className="text-slate-705">Subject:</strong> {mailTopic === 'cargo_dispute' ? `[APEX DISPUTE] Shipment ID: ${isAdminAuthenticated ? selectedShipment.id : '••••-••••-••••'} - Cargo Deviation` : mailTopic === 'customs_hold' ? `[CUSTOMS CLEARANCE] Reference ID: ${isAdminAuthenticated ? selectedShipment.id : '••••-••••-••••'}` : `[MANIFEST AMEND] Update Weights for: ${isAdminAuthenticated ? selectedShipment.id : '••••-••••-••••'}`}</div>
                               <div className="text-[10px] text-slate-400 font-mono mt-0.5">Relayed via: Incoming MX mail.apextrackhub.com</div>
                             </div>
 
@@ -871,7 +873,7 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                               <div className="space-y-2">
                                 <p className="font-medium text-slate-950">Official Carrier Dispatch Notification</p>
                                 <p className="text-slate-500 leading-relaxed text-[11px]">
-                                  An official inquiry has been logged regarding active Container Ref: <strong className="font-mono text-slate-950">{selectedShipment.id}</strong>. The details below are active coordinates synced with transport partners.
+                                  An official inquiry has been logged regarding active Container Ref: <strong className="font-mono text-slate-950">{isAdminAuthenticated ? selectedShipment.id : '••••-••••-••••'}</strong>. The details below are active coordinates synced with transport partners.
                                 </p>
                               </div>
 
@@ -891,7 +893,7 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                                 </div>
                                 <div>
                                   <span className="text-slate-400 block text-[9px] font-mono uppercase">Bond Reference</span>
-                                  <span className="font-mono text-emerald-600 font-bold">REG_FMC_{selectedShipment.id.replace(/-/g, '_')}</span>
+                                  <span className="font-mono text-emerald-600 font-bold">REG_FMC_{isAdminAuthenticated ? selectedShipment.id.replace(/-/g, '_') : '••••_••••_••••'}</span>
                                 </div>
                               </div>
 

@@ -262,6 +262,7 @@ export default function App() {
               <HomeView 
                 onSearch={handleTriggerTracking} 
                 availableShipments={shipments} 
+                isAdminAuthenticated={isAdminAuthenticated}
               />
             )}
             
