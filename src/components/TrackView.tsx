@@ -491,6 +491,12 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                       <span className="text-slate-600 font-mono text-[11px] block break-all">{selectedShipment.senderEmail}</span>
                     </div>
                   )}
+                  {selectedShipment.senderPhone && (
+                    <div className="py-2 border-b border-slate-50 space-y-0.5">
+                      <span className="text-slate-400 block font-sans">Sender Phone</span>
+                      <span className="text-slate-600 font-mono text-[11px] block break-all">{selectedShipment.senderPhone}</span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-slate-400 font-sans">Consignee</span>
@@ -504,6 +510,12 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                     <div className="py-2 border-b border-slate-50 space-y-0.5">
                       <span className="text-slate-400 block font-sans">Consignee Email</span>
                       <span className="text-slate-600 font-mono text-[11px] block break-all">{selectedShipment.receiverEmail}</span>
+                    </div>
+                  )}
+                  {selectedShipment.receiverPhone && (
+                    <div className="py-2 border-b border-slate-50 space-y-0.5">
+                      <span className="text-slate-400 block font-sans">Consignee Phone</span>
+                      <span className="text-slate-600 font-mono text-[11px] block break-all">{selectedShipment.receiverPhone}</span>
                     </div>
                   )}
 

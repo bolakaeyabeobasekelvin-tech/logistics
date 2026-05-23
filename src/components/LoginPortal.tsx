@@ -21,7 +21,7 @@ export default function LoginPortal({ onSuccess, onCancel }: LoginPortalProps) {
 
     // Simulate secure handshaking
     setTimeout(() => {
-      if (username === 'admin' && password === 'Bone500@') {
+      if (username === 'admin' && password === 'BEOK@1991!@@@') {
         onSuccess();
       } else {
         setError('Invalid secure token credentials. Please contact terminal logistics desk.');

@@ -49,9 +49,11 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
   const [newSender, setNewSender] = useState('');
   const [newSenderAddr, setNewSenderAddr] = useState('');
   const [newSenderEmail, setNewSenderEmail] = useState('');
+  const [newSenderPhone, setNewSenderPhone] = useState('');
   const [newReceiver, setNewReceiver] = useState('');
   const [newReceiverAddr, setNewReceiverAddr] = useState('');
   const [newReceiverEmail, setNewReceiverEmail] = useState('');
+  const [newReceiverPhone, setNewReceiverPhone] = useState('');
   const [newOriginCity, setNewOriginCity] = useState('');
   const [newOriginCountry, setNewOriginCountry] = useState('USA');
   const [newDestCity, setNewDestCity] = useState('');
@@ -93,9 +95,11 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
       senderName: newSender || 'Default Sender Co.',
       senderAddress: newSenderAddr || '100 Main St, Austin, TX',
       senderEmail: newSenderEmail || '',
+      senderPhone: newSenderPhone || '',
       receiverName: newReceiver || 'Default Recipient Corp',
       receiverAddress: newReceiverAddr || '500 Center Blvd, Los Angeles, CA',
       receiverEmail: newReceiverEmail || '',
+      receiverPhone: newReceiverPhone || '',
       originCity: newOriginCity || 'Austin',
       originCountry: newOriginCountry || 'USA',
       destinationCity: newDestCity || 'Los Angeles',
@@ -130,9 +134,11 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
     setNewSender('');
     setNewSenderAddr('');
     setNewSenderEmail('');
+    setNewSenderPhone('');
     setNewReceiver('');
     setNewReceiverAddr('');
     setNewReceiverEmail('');
+    setNewReceiverPhone('');
     setNewOriginCity('');
     setNewDestCity('');
     setNewNotes('');
@@ -522,6 +528,15 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
                       className="w-full bg-white rounded-lg p-2 border border-slate-200 text-[10px]"
                     />
                   </div>
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="Sender Phone Number"
+                      value={newSenderPhone}
+                      onChange={(e) => setNewSenderPhone(e.target.value)}
+                      className="w-full bg-white rounded-lg p-2 border border-slate-200 text-[10px]"
+                    />
+                  </div>
                 </div>
 
                 {/* Receiver Specifics */}
@@ -551,6 +566,15 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
                       placeholder="Receiver Email Address"
                       value={newReceiverEmail}
                       onChange={(e) => setNewReceiverEmail(e.target.value)}
+                      className="w-full bg-white rounded-lg p-2 border border-slate-200 text-[10px]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="Receiver Phone Number"
+                      value={newReceiverPhone}
+                      onChange={(e) => setNewReceiverPhone(e.target.value)}
                       className="w-full bg-white rounded-lg p-2 border border-slate-200 text-[10px]"
                     />
                   </div>
@@ -755,6 +779,13 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
                       onChange={(e) => setEditingShipment({ ...editingShipment, senderEmail: e.target.value })}
                       className="w-full bg-white p-2 border rounded-lg text-[10px]"
                     />
+                    <input
+                      type="text"
+                      placeholder="Phone"
+                      value={editingShipment.senderPhone || ''}
+                      onChange={(e) => setEditingShipment({ ...editingShipment, senderPhone: e.target.value })}
+                      className="w-full bg-white p-2 border rounded-lg text-[10px]"
+                    />
                   </div>
 
                   {/* Receiver block */}
@@ -779,6 +810,13 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
                       placeholder="Email"
                       value={editingShipment.receiverEmail || ''}
                       onChange={(e) => setEditingShipment({ ...editingShipment, receiverEmail: e.target.value })}
+                      className="w-full bg-white p-2 border rounded-lg text-[10px]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Phone"
+                      value={editingShipment.receiverPhone || ''}
+                      onChange={(e) => setEditingShipment({ ...editingShipment, receiverPhone: e.target.value })}
                       className="w-full bg-white p-2 border rounded-lg text-[10px]"
                     />
                   </div>

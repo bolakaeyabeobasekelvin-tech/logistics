@@ -17,9 +17,11 @@ export interface Shipment {
   senderName: string;
   senderAddress: string;
   senderEmail?: string;
+  senderPhone?: string;
   receiverName: string;
   receiverAddress: string;
   receiverEmail?: string;
+  receiverPhone?: string;
   originCity: string;
   originCountry: string;
   destinationCity: string;
