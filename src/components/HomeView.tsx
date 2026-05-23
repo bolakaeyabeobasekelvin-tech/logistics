@@ -34,7 +34,7 @@ export default function HomeView({ onSearch, availableShipments }: HomeViewProps
         {/* Background Image with Dark Tint Overlay */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/src/assets/images/hero_cargo_ship_1779457812587.png"
+            src="./hero_cargo_ship.png"
             alt="Elite Global Freight Cargo Ship"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover opacity-35 scale-105 transform hover:scale-100 transition-transform duration-1000"
@@ -154,7 +154,7 @@ export default function HomeView({ onSearch, availableShipments }: HomeViewProps
             <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition duration-200 group border border-slate-100">
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src="/src/assets/images/hero_cargo_ship_1779457812587.png" 
+                  src="./hero_cargo_ship.png" 
                   alt="Ocean Maritime Vessel" 
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -174,7 +174,7 @@ export default function HomeView({ onSearch, availableShipments }: HomeViewProps
             <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition duration-200 group border border-slate-100">
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src="/src/assets/images/freight_airplane_1779457829028.png" 
+                  src="./freight_airplane.png" 
                   alt="Charter Aeroplane loading logistics"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -194,7 +194,7 @@ export default function HomeView({ onSearch, availableShipments }: HomeViewProps
             <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition duration-200 group border border-slate-100">
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src="/src/assets/images/delivery_truck_1779457848460.png" 
+                  src="./delivery_truck.png" 
                   alt="Delivery Truck highway shipment" 
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

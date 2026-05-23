@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Calendar, Scale, Box, Check, FileText, Truck, ArrowRight, ShieldCheck, Map, Clock, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Calendar, Scale, Box, Check, FileText, Truck, ArrowRight, ShieldCheck, Map, Clock, AlertCircle, Bell, Mail, Send, Loader2, Trash2, X } from 'lucide-react';
 import { Shipment, ShipmentStatus } from '../types';
 
 interface TrackViewProps {
   currentTrackingId: string;
   onSearch: (trackingId: string | '') => void;
   availableShipments: Shipment[];
+}
+
+interface CargoAlert {
+  id: string;
+  shipmentId: string;
+  email: string;
+  milestones: boolean;
+  delays: boolean;
+  delivery: boolean;
+  createdAt: string;
 }
 
 // Order of shipment stages
@@ -22,6 +32,67 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
   const [searchVal, setSearchVal] = useState(currentTrackingId);
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Email Alert Tracking System States
+  const [email, setEmail] = useState('');
+  const [alertMilestones, setAlertMilestones] = useState(true);
+  const [alertDelays, setAlertDelays] = useState(true);
+  const [alertDelivery, setAlertDelivery] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  const [activeAlerts, setActiveAlerts] = useState<CargoAlert[]>(() => {
+    try {
+      const saved = localStorage.getItem('apex_cargo_alerts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('apex_cargo_alerts', JSON.stringify(activeAlerts));
+  }, [activeAlerts]);
+
+  const handleRegisterAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !selectedShipment) return;
+
+    setIsRegistering(true);
+    setSuccessMessage(null);
+
+    // Simulate establishing connection to real-time notification brokers
+    setTimeout(() => {
+      const newAlert: CargoAlert = {
+        id: Math.random().toString(36).substring(2, 9),
+        shipmentId: selectedShipment.id,
+        email: email.trim(),
+        milestones: alertMilestones,
+        delays: alertDelays,
+        delivery: alertDelivery,
+        createdAt: new Date().toISOString()
+      };
+
+      // Ensure no duplicates for same email & shipment id
+      const exists = activeAlerts.some(
+        a => a.email.toLowerCase() === newAlert.email.toLowerCase() && a.shipmentId === newAlert.shipmentId
+      );
+      
+      if (exists) {
+        setSuccessMessage(`Alert update confirmed! Email "${email.trim()}" is already registered for shipment ${selectedShipment.id}.`);
+      } else {
+        setActiveAlerts(prev => [newAlert, ...prev]);
+        setSuccessMessage(`Simulated alert established successfully! Dispatch logs will stream notifications to ${email.trim()}.`);
+      }
+
+      setEmail('');
+      setIsRegistering(false);
+    }, 1050);
+  };
+
+  const handleRemoveAlert = (alertId: string) => {
+    setActiveAlerts(prev => prev.filter(alert => alert.id !== alertId));
+  };
 
   // Handle outside search prop updates
   useEffect(() => {
@@ -370,6 +441,159 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                   </div>
                 </div>
               </div>
+
+              {/* Email Alert System Card */}
+              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+                  <Bell className="w-5 h-5 text-sky-500 animate-pulse" />
+                  <h4 className="font-bold text-slate-950 text-sm font-sans tracking-tight">Cargo Tracking Alerts</h4>
+                </div>
+
+                <p className="text-slate-500 text-[11px] font-sans leading-relaxed">
+                  Subscribe to receive automated carrier updates. Real-time notifications will cascade whenever dispatcher logs record state changes.
+                </p>
+
+                {successMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-800 text-[11px] font-medium leading-normal relative pr-8"
+                  >
+                    <button 
+                      type="button"
+                      onClick={() => setSuccessMessage(null)}
+                      className="absolute right-2.5 top-2.5 text-emerald-600 hover:text-emerald-800 font-bold transition cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    {successMessage}
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleRegisterAlert} className="space-y-4">
+                  <div>
+                    <label className="block text-slate-700 text-[10px] font-bold uppercase tracking-wider mb-1.5 font-sans">
+                      Recipient Email Address
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-3.5 text-slate-400 font-bold">
+                        <Mail className="w-4 h-4" />
+                      </span>
+                      <input
+                        type="email"
+                        required
+                        placeholder="carrier-desk@enterprise.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isRegistering}
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl pl-9 pr-3 py-3 text-xs text-slate-900 font-sans focus:outline-hidden transition"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span className="text-[9px] font-mono font-bold text-slate-400 uppercase block tracking-wider">Alert Event Filters</span>
+                    
+                    <label className="flex items-center gap-2.5 text-[11px] text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={alertMilestones}
+                        onChange={(e) => setAlertMilestones(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      <span>Transit Hub Milestones</span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 text-[11px] text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={alertDelays}
+                        onChange={(e) => setAlertDelays(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      <span>Critical Dispatch Delays</span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 text-[11px] text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={alertDelivery}
+                        onChange={(e) => setAlertDelivery(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      <span>Final Signed Proof & Delivery</span>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isRegistering}
+                    className="w-full bg-slate-950 hover:bg-slate-900 text-white font-sans font-bold text-[10px] py-3.5 px-4 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 disabled:bg-slate-400 shadow-xs"
+                  >
+                    {isRegistering ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> Connecting Gateway...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3 h-3" /> Pin Alert Stream
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              {/* Active Alerts Watchlist */}
+              {activeAlerts.length > 0 && (
+                <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-50">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <h4 className="font-bold text-slate-950 text-xs font-sans tracking-tight">Active Telemetry Watchers</h4>
+                    </div>
+                    <span className="font-mono text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">
+                      {activeAlerts.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                    {activeAlerts.map((alert) => (
+                      <div 
+                        key={alert.id} 
+                        className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start justify-between gap-3 text-xs opacity-95 hover:opacity-100 transition duration-150"
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[9px] font-bold text-slate-700 bg-sky-50 border border-sky-100 px-1.5 py-0.5 rounded">
+                              {alert.shipmentId}
+                            </span>
+                            <span className="text-slate-450 text-[9px] font-mono">active</span>
+                          </div>
+                          <p className="text-slate-800 font-sans truncate font-medium text-xs" title={alert.email}>
+                            {alert.email}
+                          </p>
+                          <div className="flex flex-wrap gap-1 text-[8px] font-mono text-slate-400">
+                            {alert.milestones && <span className="bg-white border text-slate-500 rounded px-1">Milestones</span>}
+                            {alert.delays && <span className="bg-white border text-slate-500 rounded px-1">Delays</span>}
+                            {alert.delivery && <span className="bg-white border text-slate-500 rounded px-1">Delivery</span>}
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => handleRemoveAlert(alert.id)}
+                          className="p-1 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                          title="Unbind watcher stream"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Secure Delivery Info */}
               <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-sm space-y-4 border border-slate-800">

@@ -24,7 +24,7 @@ export default function AboutView() {
       <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl mx-4 lg:mx-8 py-16 px-6">
         <div className="absolute inset-0 z-0 opacity-20">
           <img 
-            src="/src/assets/images/freight_airplane_1779457829028.png" 
+            src="./freight_airplane.png" 
             alt="Cargo plane on the tarmac" 
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover filter saturate-50"

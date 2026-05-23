@@ -59,7 +59,7 @@ export default function ServicesView() {
       <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl mx-4 lg:mx-8 py-16 px-6">
         <div className="absolute inset-0 z-0 opacity-15">
           <img 
-            src="/src/assets/images/delivery_truck_1779457848460.png" 
+            src="./delivery_truck.png" 
             alt="Logistics truck fleet driving" 
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover filter contrast-125"
