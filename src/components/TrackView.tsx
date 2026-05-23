@@ -7,6 +7,7 @@ interface TrackViewProps {
   currentTrackingId: string;
   onSearch: (trackingId: string | '') => void;
   availableShipments: Shipment[];
+  isAdminAuthenticated?: boolean;
 }
 
 interface CargoAlert {
@@ -28,7 +29,7 @@ const STAGES: { key: ShipmentStatus; label: string; desc: string }[] = [
   { key: 'delivered', label: 'Signed Delivery', desc: 'Completed and verified signature' }
 ];
 
-export default function TrackView({ currentTrackingId, onSearch, availableShipments }: TrackViewProps) {
+export default function TrackView({ currentTrackingId, onSearch, availableShipments, isAdminAuthenticated = false }: TrackViewProps) {
   const [searchVal, setSearchVal] = useState(currentTrackingId);
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -546,69 +547,71 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
               </div>
 
               {/* Active Mail Gateway (MX Record Integration) */}
-              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-                  <Mail className="w-5 h-5 text-sky-500" />
-                  <h4 className="font-bold text-slate-950 text-sm font-sans tracking-tight">Active Mail Gateway</h4>
-                </div>
-                <p className="text-slate-500 text-[11px] font-sans leading-relaxed">
-                  The MX records for <span className="font-mono text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[10.5px] font-bold">apextrackhub.com</span> are fully active. Send custom manifests, clearance exceptions, or cargo claims directly to the central desk.
-                </p>
-
-                <div className="space-y-3">
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1 text-xs">
-                    <span className="text-slate-400 block text-[9.5px] font-mono font-bold uppercase tracking-wider">Central Desk Address</span>
-                    <a 
-                      href="mailto:ship@apextrackhub.com" 
-                      className="text-sky-600 hover:text-sky-800 font-mono font-bold flex items-center gap-1.5 underline underline-offset-2 break-all"
-                    >
-                      ship@apextrackhub.com
-                    </a>
+              {isAdminAuthenticated && (
+                <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+                    <Mail className="w-5 h-5 text-sky-500" />
+                    <h4 className="font-bold text-slate-950 text-sm font-sans tracking-tight">Active Mail Gateway</h4>
                   </div>
+                  <p className="text-slate-500 text-[11px] font-sans leading-relaxed">
+                    The MX records for <span className="font-mono text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[10.5px] font-bold">apextrackhub.com</span> are fully active. Send custom manifests, clearance exceptions, or cargo claims directly to the central desk.
+                  </p>
 
-                  {/* Mail drafting tool */}
-                  <div className="space-y-2.5">
-                    <span className="text-slate-400 block text-[9.5px] font-mono font-bold uppercase tracking-wider">Draft Official Communication</span>
-                    
-                    <select
-                      value={mailTopic}
-                      onChange={(e) => setMailTopic(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl px-3 py-2 text-xs text-slate-900 font-sans focus:outline-hidden transition"
-                    >
-                      <option value="cargo_dispute">Cargo Exception / Dispute</option>
-                      <option value="customs_hold">Customs Clearance Hold Release</option>
-                      <option value="manifest_edit">Manifest Weight Info Update</option>
-                    </select>
-
-                    <textarea
-                      placeholder="Input custom cargo logs, billing notes or variance claims..."
-                      value={mailBody}
-                      onChange={(e) => setMailBody(e.target.value)}
-                      rows={3}
-                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl p-3 text-xs text-slate-900 font-sans focus:outline-hidden transition resize-none"
-                    />
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={handleLaunchMailClient}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-sans font-bold text-[10px] py-3.5 px-3 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200"
-                        title="Launches your local email system with MX configurations"
+                  <div className="space-y-3">
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1 text-xs">
+                      <span className="text-slate-400 block text-[9.5px] font-mono font-bold uppercase tracking-wider">Central Desk Address</span>
+                      <a 
+                        href="mailto:ship@apextrackhub.com" 
+                        className="text-sky-600 hover:text-sky-800 font-mono font-bold flex items-center gap-1.5 underline underline-offset-2 break-all"
                       >
-                        <Send className="w-3.5 h-3.5 text-slate-700" /> Mail client
-                      </button>
+                        ship@apextrackhub.com
+                      </a>
+                    </div>
 
-                      <button
-                        type="button"
-                        onClick={handleSimulateSmtpDispatch}
-                        className="bg-sky-50 hover:bg-sky-100 text-sky-950 font-sans font-bold text-[10px] py-3.5 px-3 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-sky-200 border-dashed"
+                    {/* Mail drafting tool */}
+                    <div className="space-y-2.5">
+                      <span className="text-slate-400 block text-[9.5px] font-mono font-bold uppercase tracking-wider">Draft Official Communication</span>
+                      
+                      <select
+                        value={mailTopic}
+                        onChange={(e) => setMailTopic(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl px-3 py-2 text-xs text-slate-900 font-sans focus:outline-hidden transition"
                       >
-                        <Loader2 className="w-3.5 h-3.5 text-sky-600 animate-spin" /> Live Sim
-                      </button>
+                        <option value="cargo_dispute">Cargo Exception / Dispute</option>
+                        <option value="customs_hold">Customs Clearance Hold Release</option>
+                        <option value="manifest_edit">Manifest Weight Info Update</option>
+                      </select>
+
+                      <textarea
+                        placeholder="Input custom cargo logs, billing notes or variance claims..."
+                        value={mailBody}
+                        onChange={(e) => setMailBody(e.target.value)}
+                        rows={3}
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl p-3 text-xs text-slate-900 font-sans focus:outline-hidden transition resize-none"
+                      />
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={handleLaunchMailClient}
+                          className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-sans font-bold text-[10px] py-3.5 px-3 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200"
+                          title="Launches your local email system with MX configurations"
+                        >
+                          <Send className="w-3.5 h-3.5 text-slate-700" /> Mail client
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleSimulateSmtpDispatch}
+                          className="bg-sky-50 hover:bg-sky-100 text-sky-950 font-sans font-bold text-[10px] py-3.5 px-3 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-sky-200 border-dashed"
+                        >
+                          <Loader2 className="w-3.5 h-3.5 text-sky-600 animate-spin" /> Live Sim
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Email Alert System Card */}
               <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">

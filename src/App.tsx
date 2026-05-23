@@ -278,6 +278,7 @@ export default function App() {
                 currentTrackingId={currentTrackingId} 
                 onSearch={setCurrentTrackingId} 
                 availableShipments={shipments} 
+                isAdminAuthenticated={isAdminAuthenticated}
               />
             )}
 

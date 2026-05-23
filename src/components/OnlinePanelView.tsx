@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, Edit2, Trash2, Eye, EyeOff, CheckCircle2, AlertTriangle, 
   Settings, User, Landmark, Weight, FileText, Sparkles, Database, 
-  RotateCcw, History, Search, ArrowRight, Tag, Activity, Calendar
+  RotateCcw, History, Search, ArrowRight, Tag, Activity, Calendar,
+  Mail, Send, Loader2, X
 } from 'lucide-react';
 import { Shipment, ShipmentStatus, CarrierType, ShippingMethod } from '../types';
 
@@ -72,6 +73,50 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
   const [newLogLocation, setNewLogLocation] = useState('');
   const [newLogDesc, setNewLogDesc] = useState('');
   const [newLogStatus, setNewLogStatus] = useState<ShipmentStatus>('received');
+
+  // Dedicated active email domain drafting & SMTP simulation states
+  const SMTP_LOG_STEPS = [
+    { text: 'Resolving MX resource records for domain "apextrackhub.com"...', delay: 220 },
+    { text: '✓ CRITICAL: Primary MX Record target verified: incoming-mail.apextrackhub.com (Priority 10)', delay: 180 },
+    { text: 'Opening raw socket stream to incoming-mail.apextrackhub.com on Port 25...', delay: 280 },
+    { text: '← [SMTP 220] mail.apextrackhub.com ESMTP Postfix Service ready to accept payloads', delay: 150 },
+    { text: '→ EHLO web-portal.apextrackhub.com', delay: 200 },
+    { text: '← [SMTP 250] DSN / 8BITMIME / PIPELINING / STARTTLS / SIZE 15728640', delay: 150 },
+    { text: '→ MAIL FROM: <dispatcher@apextrackhub.com>', delay: 150 },
+    { text: '← [SMTP 250] 2.1.0 Sender <dispatcher@apextrackhub.com> OK', delay: 150 },
+    { text: '→ RCPT TO: <__EMAIL__>', delay: 250 },
+    { text: '← [SMTP 250] 2.1.5 Recipient Verified. Remote mailbox accessible', delay: 180 },
+    { text: '→ DATA', delay: 150 },
+    { text: '← [SMTP 354] Start mail input. End with <CR><LF>.<CR><LF>', delay: 150 },
+    { text: '→ Writing MIME Content-Type headers...', delay: 150 },
+    { text: '→ Pushing HTML multipart responsive content templates to MX relays...', delay: 280 },
+    { text: '← [SMTP 250] q92x_apex_logistics - 2.0.0 OK: Message parsed & accepted for outbound queue', delay: 200 },
+    { text: '✓ [SUCCESS] Dispatch completed! Simulated email message relayed via MX successfully.', delay: 150 }
+  ];
+
+  const [adminMailTopic, setAdminMailTopic] = useState('cargo_dispute');
+  const [adminMailBody, setAdminMailBody] = useState('');
+  const [adminShowSmtpModal, setAdminShowSmtpModal] = useState(false);
+  const [adminSmtpStep, setAdminSmtpStep] = useState(0);
+  const [adminSmtpTargetEmail, setAdminSmtpTargetEmail] = useState('');
+
+  useEffect(() => {
+    if (!adminShowSmtpModal) return;
+    if (adminSmtpStep >= SMTP_LOG_STEPS.length) return;
+
+    const currentStep = SMTP_LOG_STEPS[adminSmtpStep];
+    const timer = setTimeout(() => {
+      setAdminSmtpStep(prev => prev + 1);
+    }, currentStep.delay);
+
+    return () => clearTimeout(timer);
+  }, [adminShowSmtpModal, adminSmtpStep]);
+
+  const handleAdminSimulateSmtpDispatch = () => {
+    setAdminSmtpTargetEmail(adminSmtpTargetEmail || 'incoming@apextrackhub.com');
+    setAdminSmtpStep(0);
+    setAdminShowSmtpModal(true);
+  };
 
   // Trigger random formatted tracking code creation
   const generateRandomTrackingId = () => {
@@ -952,27 +997,210 @@ export default function OnlinePanelView({ shipments, onUpdateShipments, onResetS
 
           {/* Action 3: General System Instructions and WooCommerce Integration Guidelines */}
           {!editingShipment && !showAddForm && (
-            <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-sm space-y-4 border border-slate-800">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
-                <Settings className="w-5 h-5 animate-spin-slow" />
+            <div className="space-y-6">
+              {/* Active Mail Gateway (MX Record Integration) */}
+              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4 text-slate-900">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+                  <Mail className="w-5 h-5 text-sky-500" />
+                  <h4 className="font-bold text-slate-950 text-sm font-sans tracking-tight">Active Mail Gateway</h4>
+                </div>
+                <p className="text-slate-500 text-[11px] font-sans leading-relaxed">
+                  Send custom manifests, clearance exceptions, or cargo claims directly to clients/partners. The central MX relays are fully active.
+                </p>
+
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <span className="text-slate-400 block text-[9px] font-mono font-bold uppercase tracking-wider text-left">Recipient (Select active shipment client)</span>
+                    <select 
+                      value={adminSmtpTargetEmail}
+                      onChange={(e) => setAdminSmtpTargetEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-sans focus:outline-hidden transition"
+                    >
+                      <option value="">-- Select Shipment Client Email --</option>
+                      {shipments.filter(s => s.email || s.senderEmail || s.receiverEmail).map(s => {
+                        const emailOpt = s.email || s.senderEmail || s.receiverEmail || '';
+                        return (
+                          <option key={s.id} value={emailOpt}>
+                            {s.id} - {emailOpt.substring(0, 20)}... ({s.senderName})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-slate-400 block text-[9px] font-mono font-bold uppercase tracking-wider text-left">Or Input Custom Email</span>
+                    <input
+                      type="email"
+                      placeholder="name@business.com"
+                      value={adminSmtpTargetEmail}
+                      onChange={(e) => setAdminSmtpTargetEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-sans focus:outline-hidden transition"
+                    />
+                  </div>
+
+                  {/* Mail drafting tool */}
+                  <div className="space-y-2.5">
+                    <span className="text-slate-400 block text-[9px] font-mono font-bold uppercase tracking-wider text-left">Mail Topic</span>
+                    <select
+                      value={adminMailTopic}
+                      onChange={(e) => setAdminMailTopic(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-sans focus:outline-hidden transition"
+                    >
+                      <option value="cargo_dispute">Cargo Exception / Dispute</option>
+                      <option value="customs_hold">Customs Clearance Hold Release</option>
+                      <option value="manifest_edit">Manifest Weight Info Update</option>
+                    </select>
+
+                    <textarea
+                      placeholder="Input custom cargo logs, billing notes or variance claims..."
+                      value={adminMailBody}
+                      onChange={(e) => setAdminMailBody(e.target.value)}
+                      rows={2}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl p-2.5 text-xs text-slate-900 font-sans focus:outline-hidden transition resize-none"
+                    />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href={`mailto:${adminSmtpTargetEmail || 'ship@apextrackhub.com'}?subject=${encodeURIComponent(adminMailTopic)}&body=${encodeURIComponent(adminMailBody)}`}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-sans font-bold text-[9px] py-2 px-2.5 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200"
+                        title="Launches local email system"
+                      >
+                        <Send className="w-3 h-3 text-slate-700" /> Mail client
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={handleAdminSimulateSmtpDispatch}
+                        className="bg-sky-50 hover:bg-sky-100 text-sky-950 font-sans font-bold text-[9px] py-2 px-2.5 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-sky-200 border-dashed"
+                      >
+                        <Loader2 className="w-3.5 h-3.5 text-sky-600 animate-spin" /> Live Sim
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h4 className="font-bold font-sans text-sm tracking-tight">Cargo Admin Instructions</h4>
-              
-              <div className="space-y-3 text-xs leading-relaxed text-slate-300">
-                <p>
-                  This terminal simulates a **WooCommerce Order Tracking** database where you can register active tracking tags, assign logistics companies, and update transit states.
-                </p>
-                <p className="border-l-2 border-sky-400 pl-3 italic text-[11px]">
-                  When you modify or append a dynamic history scan to any cargo index here, it is cached straight into `localStorage`. You can immediately enter that tracking key into the <strong>Track Shipment</strong> main sub-view or Home search input to trace its coordinates.
-                </p>
-                <p>
-                  Use the green and blue checks to toggle public search availability or deactivate tracking items dynamically.
-                </p>
+
+              <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-sm space-y-4 border border-slate-800">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
+                  <Settings className="w-5 h-5 animate-spin-slow" />
+                </div>
+                <h4 className="font-bold font-sans text-sm tracking-tight text-left">Cargo Admin Instructions</h4>
+                
+                <div className="space-y-3 text-xs leading-relaxed text-slate-300 text-left">
+                  <p>
+                    This terminal simulates a **WooCommerce Order Tracking** database where you can register active tracking tags, assign logistics companies, and update transit states.
+                  </p>
+                  <p className="border-l-2 border-sky-400 pl-3 italic text-[11px]">
+                    When you modify or append a dynamic history scan to any cargo index here, it is cached straight into `localStorage`. You can immediately enter that tracking key into the <strong>Track Shipment</strong> main sub-view or Home search input to trace its coordinates.
+                  </p>
+                  <p>
+                    Use the green and blue checks to toggle public search availability or deactivate tracking items dynamically.
+                  </p>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Admin SMTP Socket Simulation Modal */}
+      <AnimatePresence>
+        {adminShowSmtpModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-55">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-slate-950 text-emerald-400 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]"
+            >
+              {/* Terminal header */}
+              <div className="bg-slate-900 px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded-full bg-rose-500 block shrink-0"></span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-yellow-500 block shrink-0"></span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 block shrink-0"></span>
+                  <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-wider ml-2">MX SMTP Direct Relay System Console</span>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setAdminShowSmtpModal(false)}
+                  className="text-slate-400 hover:text-white transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Terminal screen output */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-2.5 font-mono text-xs text-left bg-slate-950 min-h-[300px]">
+                {SMTP_LOG_STEPS.slice(0, adminSmtpStep).map((step, idx) => {
+                  const message = step.text.replace('__EMAIL__', adminSmtpTargetEmail || 'incoming@apextrackhub.com');
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 0.9 + (idx === adminSmtpStep - 1 ? 0.1 : 0) }}
+                      className={`${
+                        step.text.startsWith('✓') ? 'text-emerald-300 font-bold' :
+                        step.text.startsWith('→') ? 'text-sky-400' :
+                        step.text.startsWith('←') ? 'text-purple-400' : 'text-slate-350'
+                      }`}
+                    >
+                      {idx === adminSmtpStep - 1 && adminSmtpStep < SMTP_LOG_STEPS.length && (
+                        <span className="inline-block w-2 h-4 bg-emerald-400 animate-pulse mr-1 font-sans"></span>
+                      )}
+                      {message}
+                    </motion.div>
+                  );
+                })}
+
+                {adminSmtpStep < SMTP_LOG_STEPS.length ? (
+                  <div className="flex items-center gap-2 pt-2 text-slate-500 italic">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-500 shrink-0" />
+                    <span>Transmitting stream packet {adminSmtpStep + 1}/{SMTP_LOG_STEPS.length}...</span>
+                  </div>
+                ) : (
+                  <motion.div 
+                    initial={{ scale: 0.98, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="mt-6 p-4 bg-slate-900/50 rounded-2xl border border-slate-800 space-y-1.5"
+                  >
+                    <span className="text-emerald-500 block font-bold text-[10px] uppercase tracking-wider">MIME Delivery Confirmation Payload</span>
+                    <div className="text-[11px] text-slate-405 space-y-1 font-mono text-left">
+                      <div><strong className="text-slate-200">To:</strong> {adminSmtpTargetEmail || 'incoming@apextrackhub.com'}</div>
+                      <div><strong className="text-slate-200">Gateway:</strong> mail.apextrackhub.com (25)</div>
+                      <div><strong className="text-slate-200">Topic:</strong> {adminMailTopic}</div>
+                      <div><strong className="text-slate-200">Payload size:</strong> {3.5 + Math.round(adminMailBody.length / 50) / 10} KB</div>
+                      <p className="mt-2.5 p-3 rounded-xl bg-slate-950 text-slate-350 border border-slate-850 break-all leading-relaxed whitespace-pre-wrap">
+                        {adminMailBody || '(Standard dispatch exception release confirmation message)'}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Terminal actions footer */}
+              <div className="bg-slate-900 border-t border-slate-800 px-6 py-4 flex gap-3 shrink-0 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setAdminSmtpStep(0)}
+                  disabled={adminSmtpStep === 0}
+                  className="bg-slate-800 hover:bg-slate-705 text-white disabled:opacity-50 font-mono text-[10px] py-2 px-4 rounded-xl transition cursor-pointer uppercase tracking-wider flex items-center gap-1.5 border border-slate-750"
+                >
+                  Clear Logs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminShowSmtpModal(false)}
+                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-bold text-[10px] py-2 px-4 rounded-xl transition cursor-pointer uppercase tracking-wider flex items-center gap-1.5"
+                >
+                  Close Terminal
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
