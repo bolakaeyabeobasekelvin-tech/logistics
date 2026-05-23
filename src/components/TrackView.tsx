@@ -177,6 +177,9 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
         } else {
           setSelectedShipment(match);
           setErrorMessage('');
+          if (match.email) {
+            setEmail(match.email);
+          }
         }
       } else {
         setSelectedShipment(null);
@@ -482,6 +485,12 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                     <span className="text-slate-400 block font-sans">Sender Dispatch Point</span>
                     <span className="text-slate-600 font-sans text-[11px] block leading-normal">{selectedShipment.senderAddress}</span>
                   </div>
+                  {selectedShipment.senderEmail && (
+                    <div className="py-2 border-b border-slate-50 space-y-0.5">
+                      <span className="text-slate-400 block font-sans">Sender Email</span>
+                      <span className="text-slate-600 font-mono text-[11px] block break-all">{selectedShipment.senderEmail}</span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-slate-400 font-sans">Consignee</span>
@@ -491,6 +500,12 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                     <span className="text-slate-400 block font-sans">Delivery Destination</span>
                     <span className="text-slate-600 font-sans text-[11px] block leading-normal">{selectedShipment.receiverAddress}</span>
                   </div>
+                  {selectedShipment.receiverEmail && (
+                    <div className="py-2 border-b border-slate-50 space-y-0.5">
+                      <span className="text-slate-400 block font-sans">Consignee Email</span>
+                      <span className="text-slate-600 font-mono text-[11px] block break-all">{selectedShipment.receiverEmail}</span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-slate-400 font-sans">Package Weight</span>
@@ -501,6 +516,13 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                     <span className="text-slate-400 font-sans">Box Dimensions</span>
                     <span className="text-slate-800 font-mono">{selectedShipment.dimensions}</span>
                   </div>
+
+                  {selectedShipment.email && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                      <span className="text-slate-400 font-sans">Contact Email</span>
+                      <span className="text-slate-800 font-mono text-[11px] truncate max-w-[155px]" title={selectedShipment.email}>{selectedShipment.email}</span>
+                    </div>
+                  )}
 
                   <div className="p-3 bg-slate-50 rounded-xl space-y-1 text-[11px] border border-slate-105">
                     <span className="text-slate-400 block font-mono font-bold">CARRIER NOTES / INSTRUCTIONS</span>

@@ -16,8 +16,10 @@ export interface Shipment {
   id: string; // Tracking Number (e.g., US-9482-9018)
   senderName: string;
   senderAddress: string;
+  senderEmail?: string;
   receiverName: string;
   receiverAddress: string;
+  receiverEmail?: string;
   originCity: string;
   originCountry: string;
   destinationCity: string;
@@ -33,4 +35,5 @@ export interface Shipment {
   history: ShipmentHistoryItem[];
   cargoValue?: number; // USD
   notes?: string;
+  email?: string;
 }
