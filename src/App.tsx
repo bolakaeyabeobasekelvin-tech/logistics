@@ -77,8 +77,8 @@ export default function App() {
           <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-400" /> Central Office: Houston, TX, USA</span>
         </div>
         <div className="flex items-center gap-4">
-          <a href="mailto:ship@apextrans.com" className="hover:text-white transition flex items-center gap-1">
-            <Mail className="w-3.5 h-3.5 text-sky-400" /> ship@apextrans.com
+          <a href="mailto:ship@apextrackhub.com" className="hover:text-white transition flex items-center gap-1">
+            <Mail className="w-3.5 h-3.5 text-sky-400" /> ship@apextrackhub.com
           </a>
           <a href="tel:260-270-7501" className="hover:text-white transition flex items-center gap-1">
             <Phone className="w-3.5 h-3.5 text-emerald-400" /> 260-270-7501
@@ -92,8 +92,13 @@ export default function App() {
           
           {/* Brand Logo & title */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => selectTab('home')}>
-            <span className="w-10 h-10 bg-slate-950 text-sky-400 rounded-xl flex items-center justify-center shadow-md">
-              <Ship className="w-5 h-5 animate-pulse" />
+            <span className="w-10 h-10 bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center shadow-md border border-slate-800">
+              <img 
+                src="./favicon.png" 
+                alt="Apex Track Hub" 
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
             </span>
             <div className="flex flex-col">
               <span className="font-sans font-extrabold text-slate-950 tracking-tight leading-none text-base sm:text-lg uppercase">
@@ -305,8 +310,13 @@ export default function App() {
           {/* Brief */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="w-9 h-9 bg-white text-slate-950 rounded-lg flex items-center justify-center font-bold">
-                <Ship className="w-4.5 h-4.5" />
+              <span className="w-9 h-9 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800">
+                <img 
+                  src="./favicon.png" 
+                  alt="Apex Track Hub" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
               </span>
               <span className="font-sans font-black text-white text-md uppercase tracking-wide">APEX TRANS</span>
             </div>

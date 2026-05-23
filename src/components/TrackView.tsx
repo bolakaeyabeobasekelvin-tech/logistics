@@ -54,6 +54,75 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
     localStorage.setItem('apex_cargo_alerts', JSON.stringify(activeAlerts));
   }, [activeAlerts]);
 
+  // Dedicated active email domain drafting & SMTP simulation states
+  const [mailTopic, setMailTopic] = useState('cargo_dispute');
+  const [mailBody, setMailBody] = useState('');
+  const [showSmtpModal, setShowSmtpModal] = useState(false);
+  const [smtpStep, setSmtpStep] = useState(0);
+  const [smtpTargetEmail, setSmtpTargetEmail] = useState('');
+
+  const SMTP_LOG_STEPS = [
+    { text: 'Resolving MX resource records for domain "apextrackhub.com"...', delay: 220 },
+    { text: '✓ CRITICAL: Primary MX Record target verified: incoming-mail.apextrackhub.com (Priority 10)', delay: 180 },
+    { text: 'Opening raw socket stream to incoming-mail.apextrackhub.com on Port 25...', delay: 280 },
+    { text: '← [SMTP 220] mail.apextrackhub.com ESMTP Postfix Service ready to accept payloads', delay: 150 },
+    { text: '→ EHLO web-portal.apextrackhub.com', delay: 200 },
+    { text: '← [SMTP 250] DSN / 8BITMIME / PIPELINING / STARTTLS / SIZE 15728640', delay: 150 },
+    { text: '→ MAIL FROM: <dispatcher@apextrackhub.com>', delay: 150 },
+    { text: '← [SMTP 250] 2.1.0 Sender <dispatcher@apextrackhub.com> OK', delay: 150 },
+    { text: '→ RCPT TO: <__EMAIL__>', delay: 250 },
+    { text: '← [SMTP 250] 2.1.5 Recipient Verified. Remote mailbox accessible', delay: 180 },
+    { text: '→ DATA', delay: 150 },
+    { text: '← [SMTP 354] Start mail input. End with <CR><LF>.<CR><LF>', delay: 150 },
+    { text: '→ Writing MIME Content-Type headers...', delay: 150 },
+    { text: '→ Pushing HTML multipart responsive content templates to MX relays...', delay: 280 },
+    { text: '← [SMTP 250] q92x_apex_logistics - 2.0.0 OK: Message parsed & accepted for outbound queue', delay: 200 },
+    { text: '✓ [SUCCESS] Dispatch completed! Simulated email message relayed via MX successfully.', delay: 150 }
+  ];
+
+  useEffect(() => {
+    if (!showSmtpModal) return;
+    if (smtpStep >= SMTP_LOG_STEPS.length) return;
+
+    const currentStep = SMTP_LOG_STEPS[smtpStep];
+    const timer = setTimeout(() => {
+      setSmtpStep(prev => prev + 1);
+    }, currentStep.delay);
+
+    return () => clearTimeout(timer);
+  }, [showSmtpModal, smtpStep]);
+
+  const handleLaunchMailClient = () => {
+    if (!selectedShipment) return;
+    
+    let subject = '';
+    let intro = '';
+    
+    if (mailTopic === 'cargo_dispute') {
+      subject = `[APEX DISPUTE] Shipment Ref: ${selectedShipment.id} - Cargo Deviation Exception`;
+      intro = `Apex Intermodal Dispatch Desk,\n\nI am lodging an official variance exception regarding shipment ${selectedShipment.id}.\n\nDetails:\n- Current logged status: ${selectedShipment.status.replace(/_/g, ' ').toUpperCase()}\n- Carrier: ${selectedShipment.carrier}\n- Destination: ${selectedShipment.destinationCity}, ${selectedShipment.destinationCountry}\n\nClient Notes:\n- ${mailBody || 'No custom details provided.'}\n\nPlease audit the latest tracking beacon updates.`;
+    } else if (mailTopic === 'customs_hold') {
+      subject = `[CUSTOMS CLEARANCE] Reference ID ID: ${selectedShipment.id} - Doc Submission`;
+      intro = `Apex Import/Export Compliance Brokerage,\n\nRequesting status update on customs clearance for cargo ID ${selectedShipment.id}.\n\nCarrier Route: ${selectedShipment.originCity} ➜ ${selectedShipment.destinationCity}\n\nDiscrepancy Details:\n- ${mailBody || 'No custom notes provided.'}\n\nPlease review our active bond filing numbers: REG_FMC_${selectedShipment.id.replace(/-/g, '_')}`;
+    } else {
+      subject = `[MANIFEST AMEND] Update Dimensions for Shipment: ${selectedShipment.id}`;
+      intro = `Apex Logistics Manifest Desk,\n\nRequesting weight / dimension amendment to active bills of lading for shipment ${selectedShipment.id}.\n\nCurrent Manifest Weight: ${selectedShipment.weight} lbs\nDimensions: ${selectedShipment.dimensions}\n\nAmendment Request details:\n- ${mailBody || 'No custom notes provided.'}`;
+    }
+
+    const mailtoUrl = `mailto:ship@apextrackhub.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(intro)}`;
+    window.location.href = mailtoUrl;
+  };
+
+  const handleSimulateSmtpDispatch = () => {
+    if (!selectedShipment) return;
+    
+    // Choose destination email
+    const defaultDest = activeAlerts.length > 0 ? activeAlerts[0].email : 'shipper-terminal@business-hub.com';
+    setSmtpTargetEmail(defaultDest);
+    setSmtpStep(0);
+    setShowSmtpModal(true);
+  };
+
   const handleRegisterAlert = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !selectedShipment) return;
@@ -442,6 +511,71 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                 </div>
               </div>
 
+              {/* Active Mail Gateway (MX Record Integration) */}
+              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+                  <Mail className="w-5 h-5 text-sky-500" />
+                  <h4 className="font-bold text-slate-950 text-sm font-sans tracking-tight">Active Mail Gateway</h4>
+                </div>
+                <p className="text-slate-500 text-[11px] font-sans leading-relaxed">
+                  The MX records for <span className="font-mono text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[10.5px] font-bold">apextrackhub.com</span> are fully active. Send custom manifests, clearance exceptions, or cargo claims directly to the central desk.
+                </p>
+
+                <div className="space-y-3">
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1 text-xs">
+                    <span className="text-slate-400 block text-[9.5px] font-mono font-bold uppercase tracking-wider">Central Desk Address</span>
+                    <a 
+                      href="mailto:ship@apextrackhub.com" 
+                      className="text-sky-600 hover:text-sky-800 font-mono font-bold flex items-center gap-1.5 underline underline-offset-2 break-all"
+                    >
+                      ship@apextrackhub.com
+                    </a>
+                  </div>
+
+                  {/* Mail drafting tool */}
+                  <div className="space-y-2.5">
+                    <span className="text-slate-400 block text-[9.5px] font-mono font-bold uppercase tracking-wider">Draft Official Communication</span>
+                    
+                    <select
+                      value={mailTopic}
+                      onChange={(e) => setMailTopic(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl px-3 py-2 text-xs text-slate-900 font-sans focus:outline-hidden transition"
+                    >
+                      <option value="cargo_dispute">Cargo Exception / Dispute</option>
+                      <option value="customs_hold">Customs Clearance Hold Release</option>
+                      <option value="manifest_edit">Manifest Weight Info Update</option>
+                    </select>
+
+                    <textarea
+                      placeholder="Input custom cargo logs, billing notes or variance claims..."
+                      value={mailBody}
+                      onChange={(e) => setMailBody(e.target.value)}
+                      rows={3}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-slate-950 rounded-xl p-3 text-xs text-slate-900 font-sans focus:outline-hidden transition resize-none"
+                    />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={handleLaunchMailClient}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-sans font-bold text-[10px] py-3.5 px-3 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200"
+                        title="Launches your local email system with MX configurations"
+                      >
+                        <Send className="w-3.5 h-3.5 text-slate-700" /> Mail client
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSimulateSmtpDispatch}
+                        className="bg-sky-50 hover:bg-sky-100 text-sky-950 font-sans font-bold text-[10px] py-3.5 px-3 rounded-xl uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-sky-200 border-dashed"
+                      >
+                        <Loader2 className="w-3.5 h-3.5 text-sky-600 animate-spin" /> Live Sim
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Email Alert System Card */}
               <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
@@ -609,6 +743,164 @@ export default function TrackView({ currentTrackingId, onSearch, availableShipme
                 </code>
               </div>
             </div>
+
+            {/* SMTP Socket Simulation Modal */}
+            <AnimatePresence>
+              {showSmtpModal && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+                >
+                  <motion.div
+                    initial={{ scale: 0.95, y: 15 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.95, y: 15 }}
+                    className="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col my-8"
+                  >
+                    {/* Modal Header */}
+                    <div className="bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse" />
+                        <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-wider">SMTP Outbound Gateway Sim Terminal</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSmtpModal(false)}
+                        className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Terminal Logs Scope */}
+                    <div className="p-5 flex-1 space-y-4 text-left">
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-mono text-slate-500 uppercase font-black block">Active Handshake telemetry logs</span>
+                        <div className="bg-slate-950 rounded-xl p-4 font-mono text-[10px] text-sky-400 space-y-1.5 overflow-y-auto max-h-[160px] border border-slate-850 scrollbar-thin">
+                          {SMTP_LOG_STEPS.slice(0, smtpStep).map((step, idx) => {
+                            const message = step.text.replace('__EMAIL__', smtpTargetEmail || 'incoming@apextrackhub.com');
+                            return (
+                              <div key={idx} className="flex gap-2">
+                                <span className="text-slate-600">[{new Date().toISOString().slice(11, 19)}]</span>
+                                <span className={message.startsWith('✓') ? 'text-emerald-400 font-bold' : message.startsWith('←') ? 'text-indigo-400' : 'text-slate-300'}>
+                                  {message}
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {smtpStep < SMTP_LOG_STEPS.length ? (
+                            <div className="flex items-center gap-1.5 text-sky-400 animate-pulse pl-1">
+                              <span className="w-1.5 h-3.5 bg-sky-500 animate-ping inline-block" />
+                              <span className="text-[9px] font-mono">Resolving remote MX payload packet...</span>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-emerald-400 font-bold pl-1 animate-bounce">
+                              ● OUTBOUND PACKETS ROUTED OK
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Email HTML Template Output rendering preview */}
+                      {smtpStep >= SMTP_LOG_STEPS.length && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-2 pt-2"
+                        >
+                          <span className="text-[9px] font-mono text-slate-500 uppercase font-bold block">Delivered Mailbox Preview (via MX records)</span>
+                          
+                          {/* Mock Email Frame */}
+                          <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 text-slate-800 font-sans border border-slate-200 shadow-sm max-h-[320px] overflow-y-auto text-xs relative text-left">
+                            {/* Email Header Info */}
+                            <div className="border-b border-slate-200 pb-3 mb-4 text-[11px] text-slate-500 space-y-1">
+                              <div><strong className="text-slate-705">From:</strong> Apex Intermodal Dispatch System &lt;dispatcher@apextrackhub.com&gt;</div>
+                              <div><strong className="text-slate-705">To:</strong> {smtpTargetEmail || 'shipper-terminal@business-hub.com'}</div>
+                              <div><strong className="text-slate-705">Subject:</strong> {mailTopic === 'cargo_dispute' ? `[APEX DISPUTE] Shipment ID: ${selectedShipment.id} - Cargo Deviation` : mailTopic === 'customs_hold' ? `[CUSTOMS CLEARANCE] Reference ID: ${selectedShipment.id}` : `[MANIFEST AMEND] Update Weights for: ${selectedShipment.id}`}</div>
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">Relayed via: Incoming MX mail.apextrackhub.com</div>
+                            </div>
+
+                            {/* Branded Mail content */}
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 bg-slate-900 rounded-md overflow-hidden flex items-center justify-center border border-slate-850">
+                                  <img src="./favicon.png" alt="" className="w-full h-full object-cover" />
+                                </span>
+                                <span className="font-extrabold text-slate-950 tracking-tight text-[11px] uppercase">APEX INTERMODAL LOGISTICS</span>
+                              </div>
+
+                              <div className="space-y-2">
+                                <p className="font-medium text-slate-950">Official Carrier Dispatch Notification</p>
+                                <p className="text-slate-500 leading-relaxed text-[11px]">
+                                  An official inquiry has been logged regarding active Container Ref: <strong className="font-mono text-slate-950">{selectedShipment.id}</strong>. The details below are active coordinates synced with transport partners.
+                                </p>
+                              </div>
+
+                              {/* Shipment Progress Grid */}
+                              <div className="bg-white p-3 rounded-xl border border-slate-100 grid grid-cols-2 gap-3 text-[11px]">
+                                <div>
+                                  <span className="text-slate-400 block text-[9px] font-mono uppercase">Current Stage</span>
+                                  <span className="font-bold text-sky-700 uppercase">{selectedShipment.status.replace(/_/g, ' ')}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 block text-[9px] font-mono uppercase">Estimated Delivery</span>
+                                  <span className="font-semibold text-slate-800">{selectedShipment.estimatedDelivery}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 block text-[9px] font-mono uppercase">Transit Corridor</span>
+                                  <span className="font-semibold text-slate-800">{selectedShipment.originCity} ➜ {selectedShipment.destinationCity}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 block text-[9px] font-mono uppercase">Bond Reference</span>
+                                  <span className="font-mono text-emerald-600 font-bold">REG_FMC_{selectedShipment.id.replace(/-/g, '_')}</span>
+                                </div>
+                              </div>
+
+                              {/* User custom typed notes */}
+                              <div className="bg-slate-100 border-l-4 border-slate-400 p-3 rounded-r-xl italic text-slate-650 text-[11px]">
+                                <strong className="block text-[9px] text-slate-500 uppercase font-mono tracking-wider not-italic mb-1">Logged Exception details:</strong>
+                                "{mailBody || 'No manual exception notes provided. Triggering standard manifest audit.'}"
+                              </div>
+
+                              {/* Mail footer */}
+                              <p className="text-[10px] text-slate-400 pt-3 border-t border-slate-200 text-center leading-relaxed">
+                                This notice is registered at Apex Intermodal USA logistics. Response queues are mapped directly inside the registered MX target inbox.
+                                <br />
+                                <strong className="text-slate-500 font-mono">support@apextrackhub.com</strong>
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Modal controls */}
+                    <div className="bg-slate-950 px-6 py-4 border-t border-slate-800 flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-500 font-bold">Status: Online MX Broker API</span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSmtpStep(0)}
+                          disabled={smtpStep === 0}
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold text-slate-350 rounded-lg uppercase tracking-wider transition disabled:opacity-50 cursor-pointer"
+                        >
+                          Reset Sim
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowSmtpModal(false)}
+                          className="px-4 py-1.5 bg-sky-500 hover:bg-sky-450 text-slate-950 text-[10px] font-bold rounded-lg uppercase tracking-wider transition font-mono cursor-pointer"
+                        >
+                          Close Log
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
